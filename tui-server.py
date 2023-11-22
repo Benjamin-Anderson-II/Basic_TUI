@@ -280,7 +280,7 @@ with soc.socket(soc.AF_INET, soc.SOCK_STREAM) as s:
                 break
 
             data = data.decode("utf-8").split(";")
-            if data[0] == "C":
+            if data[0] == "B":
                 if curr_window_idx == -1:
                     conn.sendall(b"(-1,-1);; ")
                     continue

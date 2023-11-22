@@ -22,7 +22,7 @@ def decode_pos(pos):
     cursor_pos[1] = int(pos[1:-1].split(",")[1])
 
 def send_btn_msg(soc, x, y, txt, highlight_fg, highlight_bg):
-    send = "C;1p;%dx;%dy;{%s};%sb;%sf" % (x, y, txt, highlight_bg, highlight_fg)
+    send = "B;1p;%dx;%dy;{%s};%sb;%sf" % (x, y, txt, highlight_bg, highlight_fg)
     soc.sendall(send.encode())
     btn = soc.recv(1024).decode("utf-8").split(";;")
     print(btn[1])
