@@ -52,6 +52,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             decode_pos(api.search_button(s, "+y"))
         if key == keys.ENTER:
 
+            # Window 2 variables
             win2_x = 20
             win2_y = 6
             win2_w = 40
@@ -61,11 +62,15 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             
             ## Since the window is not at 1,1 we need to add the x and y positions for the window
             if cursor_pos[0] == create_pos[0] + win_x and cursor_pos[1] == create_pos[1] + win_y:
-                curr_win = api.create_window(s, win2_x, win2_y, win2_w, win2_h, "M", "C", "NEW WINDOW", "M", "G", parent_win = main_win)
+                curr_win = api.create_window(s, win2_x, win2_y, win2_w, win2_h, 
+                                             "M", "C", "NEW WINDOW", "M", "G", parent_win = main_win)
+
                 decode_pos(api.create_button(s, w2btn_x, w2btn_y, "X", "R", "B"))
+
             elif(curr_win == 1 and cursor_pos[0] == w2btn_x+win2_x and cursor_pos[1] == w2btn_y+win2_y):
                     curr_win = api.exit_window(s, curr_win)
-            elif cursor_pos[0] == no_pos[0] + win_x and cursor_pos[1] == no_pos[1] + win_y:
+
+            elif cursor_pos[0] == exit_pos[0] + win_x and cursor_pos[1] == exit_pos[1] + win_y:
                 break
                 
         if key == 'q':
