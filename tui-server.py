@@ -62,6 +62,8 @@ def get_color(col, is_bg):
         return 46 if is_bg else 36
     elif col == "W":
         return 47 if is_bg else 37
+    elif col == "0":
+        return 49 if is_bg else 0
 
     return 49 if is_bg else 0
 
@@ -146,10 +148,6 @@ def parse_window(data):
             w.v_align = "B"
         elif d[-1] == "}":
             w.txt = d[1:-1].split("\n")
-        elif d[-1] == "w":
-            w.txt_width = int(d[:-1])
-        elif d[-1] == "h":
-            w.txt_height = int(d[:-1])
         elif d[-1] == "f":
             w.txt_color = get_color(d[0], False)
         elif d[-1] == "b":
@@ -183,23 +181,26 @@ def mk_win():
     if w.v_align == "T":
         s += "\033[%dH" % (w.y+1)
     elif w.v_align == "C":
-        s += "\033[%dH" % ((w.y) + (w.win_height / 2) - (w.txt_height / 2))
+        s += "\033[%dH" % ((w.y) + (w.win_height / 2) - (len(w.txt) / 2))
     elif w.v_align == "B":
-        s += "\033[%dH" % (w.y + w.win_height - w.txt_height)
+        s += "\033[%dH" % (w.y + w.win_height - len(w.txt))
 
     if w.h_align == "L":
         s += "\033[%dC" % (w.x)
     elif w.h_align == "M":
-        s += "\033[%dC" % (w.x + w.win_width/2 - w.txt_width/2)
+        s += "\033[%dC" % (w.x)
     elif w.h_align == "R":
-        s += "\033[%dC" % (w.x + w.win_width - w.txt_width)
+        s += "\033[%dC" % (w.x + w.win_width - w.len(w.txt[0]) - 1)
 
+#"\033[%dC%s\033[1B\033[%dD" % ((w.txt_width - len(t)) / 2 - 1, t, len(t) + ((w.txt_width - len(t)) / 2 - 1))
     # Put in Text
     for t in w.txt:
+        offset = 0
         if w.h_align == "M":
-            s += "\033[%dC%s\033[1B\033[%dD" % ((w.txt_width - len(t)) / 2 - 1, t, len(t) + ((w.txt_width - len(t)) / 2 - 1))
-        else:
-            s += "%s\033[1B\033[%dD" % (t, len(t))
+            offset = w.win_width / 2 - len(t) / 2 - 1
+        elif w.h_align == "R":
+            offset = w.win_width - len(t) - 1
+        s += "\033[%dC%s\033[%dD\033[1B" % (offset, t, offset + len(t))
 
     return s
     
@@ -253,9 +254,19 @@ def search(data):
 def exit_win(win):
     global curr_window_idx, windows, curr_btn_idx
     w = windows[int(win)].prev_win
+    curr_win = windows[curr_window_idx]
+    s = f"{w};;"
+
+    #clear window from view
+    s += "\033[%d;%dH\033[%d;%dm" % (curr_win.y, curr_win.x, std_fg, std_bg)
+    for i in range(curr_win.win_height):
+        for j in range(curr_win.win_width):
+            s += " "
+        s += f"\033[1B\033[{curr_win.win_width}D"
+    s += f"\033[{curr_win.win_height}A"
+
     windows.pop(curr_window_idx)
     curr_window_idx = w
-    s = f"{w};;"
     s += mk_win().split(";;")[1]
     cbi = curr_btn_idx
     for i in range(len(windows[curr_window_idx].buttons)):
@@ -316,3 +327,6 @@ with soc.socket(soc.AF_INET, soc.SOCK_STREAM) as s:
             elif data[0] == "E":
                 # Close Window
                 conn.sendall(exit_win(data[1]).encode())
+            elif data[0] == "C":
+                curr_window_idx = int(data[1])
+                conn.sendall(mk_win().encode())
